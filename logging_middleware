@@ -1,1 +1,0 @@
-log('stack', 'level', 'package', 'message')
