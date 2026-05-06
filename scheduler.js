@@ -50,7 +50,7 @@ async function runScheduler() {
 
         const depots = depotRes.data.depots || depotRes.data;
         const allVehicles = vehicleRes.data.vehicles || vehicleRes.data;
-        await Log('backend', 'info', 'handler', `Fetched ${depots.length} depots, ${allVehicles.length} vehicles`);
+        await Log('backend', 'info', 'handler', `Fetched ${depots.length} depots and ${allVehicles.length} vehicles`);
 
         // Process each depot
         for (const depot of depots) {
@@ -64,7 +64,7 @@ async function runScheduler() {
                 importance_score: v.Impact || v.importance_score || v.ImportanceScore || v.score || v.Score || 0
             }));
             
-            await Log('backend', 'info', 'handler', `Opt Depot ${depot_id}: ${tasks.length} veh, ${budget}h`);
+            await Log('backend', 'info', 'handler', `Optimizing Depot ${depot_id}: ${tasks.length} vehicles found, ${budget} hours budget`);
             
             const result = optimizeScheduling(tasks, budget);
             
@@ -72,7 +72,7 @@ async function runScheduler() {
             console.log(`- Total Importance Score: ${result.total_score}`);
             console.log(`- Selected Vehicles: ${result.selected_vehicles.join(', ') || 'None'}`);
             
-            await Log('backend', 'info', 'handler', `Depot ${depot_id}: Score ${result.total_score}, Veh ${result.selected_vehicles.length}`);
+            await Log('backend', 'info', 'handler', `Depot ${depot_id} Result: Score ${result.total_score}, Vehicles: ${result.selected_vehicles.length}`);
         }
 
     } catch (error) {
@@ -88,20 +88,14 @@ async function runScheduler() {
         console.log('\n--- FALLBACK: Running with Sample Data ---');
         const sampleDepots = [{ ID: "D001", MechanicHours: 10 }];
         const sampleTasks = [
-            { TaskID: "V01", Duration: 3, Impact: 50 },
-            { TaskID: "V02", Duration: 5, Impact: 70 },
-            { TaskID: "V03", Duration: 2, Impact: 40 },
-            { TaskID: "V04", Duration: 4, Impact: 60 }
+            { vehicle_id: "V01", duration: 3, importance_score: 50 },
+            { vehicle_id: "V02", duration: 5, importance_score: 70 },
+            { vehicle_id: "V03", duration: 2, importance_score: 40 },
+            { vehicle_id: "V04", duration: 4, importance_score: 60 }
         ];
 
         sampleDepots.forEach(depot => {
-            // Use the same mapping logic as the real API
-            const tasks = sampleTasks.map(v => ({
-                vehicle_id: v.TaskID,
-                duration: v.Duration,
-                importance_score: v.Impact
-            }));
-            const result = optimizeScheduling(tasks, depot.MechanicHours);
+            const result = optimizeScheduling(sampleTasks, depot.MechanicHours);
             console.log(`Sample Depot ${depot.ID} Optimization Results:`);
             console.log(`- Total Importance Score: ${result.total_score}`);
             console.log(`- Selected Vehicles: ${result.selected_vehicles.join(', ')}`);
