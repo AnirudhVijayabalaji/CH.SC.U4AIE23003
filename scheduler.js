@@ -4,9 +4,6 @@ const { Log, ACCESS_TOKEN } = require('../logger');
 const DEPOT_API = 'http://20.207.122.201/evaluation-service/depots';
 const VEHICLE_API = 'http://20.207.122.201/evaluation-service/vehicles';
 
-/**
- * Solves the Knapsack problem to maximize importance score within budget.
- */
 function optimizeScheduling(tasks, budget) {
     if (!tasks || tasks.length === 0 || !budget) return { total_score: 0, selected_vehicles: [] };
     
@@ -41,8 +38,6 @@ async function runScheduler() {
 
     try {
         console.log('Fetching depots and vehicles data...');
-        
-        // Fetch both depots and vehicles in parallel
         const [depotRes, vehicleRes] = await Promise.all([
             axios.get(DEPOT_API, { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } }),
             axios.get(VEHICLE_API, { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } })
@@ -52,12 +47,9 @@ async function runScheduler() {
         const allVehicles = vehicleRes.data.vehicles || vehicleRes.data;
         await Log('backend', 'info', 'handler', `Fetched ${depots.length} depots and ${allVehicles.length} vehicles`);
 
-        // Process each depot
         for (const depot of depots) {
             const depot_id = depot.ID || depot.depot_id;
             const budget = depot.MechanicHours || depot.available_mechanic_hours;
-            
-            // Map vehicle properties to our internal format using the exact keys you provided
             const tasks = allVehicles.map(v => ({
                 vehicle_id: v.TaskID || v.vehicle_id || v.VehicleID || v.ID || v.id,
                 duration: v.Duration || v.duration || v.time || v.Time || 0,
@@ -83,8 +75,6 @@ async function runScheduler() {
         
         console.error(errorMsg);
         await Log('backend', 'error', 'handler', errorMsg);
-        
-        // Fallback for demonstration
         console.log('\n--- FALLBACK: Running with Sample Data ---');
         const sampleDepots = [{ ID: "D001", MechanicHours: 10 }];
         const sampleTasks = [
